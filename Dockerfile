@@ -1,28 +1,29 @@
 FROM node:22.12-alpine AS builder
 
-# Копируем проект
+# Копируем проект вместе с tsconfig.json
 COPY . /app
+COPY tsconfig.json /app/tsconfig.json
 
 WORKDIR /app
 
-# Устанавливаем все зависимости, включая dev-зависимости
+# Устанавливаем зависимости
 RUN npm install
 
-# Сборка проекта (уже есть в package.json)
+# Сборка проекта
 RUN npm run build
 
 FROM node:22-alpine AS release
 
 WORKDIR /app
 
-# Копируем собранный проект и необходимые файлы
+# Копируем собранный проект
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 
-# Установка только production-зависимостей
+# Устанавливаем только production зависимости
 RUN npm ci --omit=dev
 
 ENTRYPOINT ["node", "dist/index.js"]
