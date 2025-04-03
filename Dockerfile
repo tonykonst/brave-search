@@ -1,31 +1,24 @@
-FROM node:22.12-alpine AS builder
-
+FROM node:22-slim
 WORKDIR /app
 
-# Копируем только необходимые файлы для установки зависимостей
-COPY package.json package-lock.json ./
+# Копируем файлы package.json 
+COPY package*.json ./
 
-# Устанавливаем все зависимости 
-RUN npm install
+# Устанавливаем корневые зависимости
+RUN npm ci
 
-# Копируем остальные файлы проекта
+# Копируем весь исходный код
 COPY . .
 
-# Сборка проекта
+# Компилируем TypeScript
 RUN npm run build
 
-FROM node:22-alpine AS release
+# Переменная окружения для порта
+ENV PORT=8080
+EXPOSE 8080
 
-WORKDIR /app
+# Переменная окружения для API Key
+ENV BRAVE_API_KEY=""
 
-# Копируем только то, что нужно для запуска
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json .
-COPY --from=builder /app/package-lock.json .
-
-ENV NODE_ENV=production
-
-# Устанавливаем только production-зависимости
-RUN npm install --only=production
-
-ENTRYPOINT ["node", "dist/index.js"]
+# Запускаем приложение
+CMD ["node", "dist/index.js"]
