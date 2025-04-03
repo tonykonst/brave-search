@@ -1,23 +1,28 @@
 FROM node:22.12-alpine AS builder
 
-# Must be entire project because `prepare` script is run during `npm install` and requires all files.
-COPY src/brave-search /app
-COPY tsconfig.json /tsconfig.json
+# Копируем проект
+COPY . /app
 
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.npm npm install
+# Устанавливаем все зависимости, включая dev-зависимости
+RUN npm install
+
+# Сборка проекта (уже есть в package.json)
+RUN npm run build
 
 FROM node:22-alpine AS release
 
 WORKDIR /app
 
+# Копируем собранный проект и необходимые файлы
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 
-RUN npm ci --ignore-scripts --omit-dev
+# Установка только production-зависимостей
+RUN npm ci --omit=dev
 
 ENTRYPOINT ["node", "dist/index.js"]
