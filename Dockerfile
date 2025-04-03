@@ -2,11 +2,14 @@ FROM node:22.12-alpine AS builder
 
 WORKDIR /app
 
-# Копируем проект (включая tsconfig.json)
-COPY . .
+# Копируем только необходимые файлы для установки зависимостей
+COPY package.json package-lock.json ./
 
-# Устанавливаем все зависимости, включая dev-зависимости
-RUN npm ci
+# Устанавливаем все зависимости 
+RUN npm install
+
+# Копируем остальные файлы проекта
+COPY . .
 
 # Сборка проекта
 RUN npm run build
@@ -23,6 +26,6 @@ COPY --from=builder /app/package-lock.json .
 ENV NODE_ENV=production
 
 # Устанавливаем только production-зависимости
-RUN npm ci
+RUN npm install --only=production
 
 ENTRYPOINT ["node", "dist/index.js"]
