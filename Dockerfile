@@ -1,24 +1,15 @@
-FROM node:22-slim
+FROM node:20
+
 WORKDIR /app
 
-# Копируем файлы package.json 
+# Сначала копируем файлы зависимостей
 COPY package*.json ./
-
-# Устанавливаем корневые зависимости
 RUN npm ci
 
-# Копируем весь исходный код
+# Затем копируем весь остальной код
 COPY . .
 
-# Компилируем TypeScript
+# Компилируем
 RUN npm run build
 
-# Переменная окружения для порта
-ENV PORT=8080
-EXPOSE 8080
-
-# Переменная окружения для API Key
-ENV BRAVE_API_KEY=""
-
-# Запускаем приложение
 CMD ["node", "dist/index.js"]
