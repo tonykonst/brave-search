@@ -5,8 +5,8 @@ WORKDIR /app
 # Копируем проект (включая tsconfig.json)
 COPY . .
 
-# Устанавливаем зависимости
-RUN npm install
+# Устанавливаем все зависимости, включая dev-зависимости
+RUN npm ci
 
 # Сборка проекта
 RUN npm run build
@@ -23,6 +23,6 @@ COPY --from=builder /app/package-lock.json .
 ENV NODE_ENV=production
 
 # Устанавливаем только production-зависимости
-RUN npm ci --omit=dev
+RUN npm ci
 
 ENTRYPOINT ["node", "dist/index.js"]
